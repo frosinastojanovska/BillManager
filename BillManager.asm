@@ -145,12 +145,13 @@ code segment
         mov [bx], dl 
         mov cx, bx  
         add cx, 2d ;cx pokazuva na pozicijata kade shto treba da se stavi value
-        mov bx, endPosition ;slednata pozicija na koja moze da se zapishe
+        mov bx, endPosition ;slednata pozicija na koja moze da se zapishe    
+        
         shiftLoop:
         mov al, [bx-2]
-        mov [bx], al ;se pomestuva za dva bajti vo devo
+        mov [bx], al ;se pomestuva za dva bajti vo levo
         dec bx
-        cmp cx, bx ;dali sme stignae do poziijata kade shto treba da se zapishe
+        cmp cx, bx ;dali sme stignale do pozicijata kade shto treba da se zapishe
         jne shiftLoop 
         mov ax, value
         mov [bx-1], ax
@@ -161,7 +162,64 @@ code segment
     addBill endp
     
     eraseBill proc 
+        call getIndex
+        pop bx
+        cmp bx, 0d
+        je endFunc 
+        ;ima zapis za toj datum, se brishe soodvetniot
+        mov dl, [bx]
+        cmp dl, 1d
+        je izbrishiZapis
+        ;se brishe vrednosta, a ostanatite se pomestuvaat 
+        mov cl, 0d 
+        push bx ;se dodava bx na stek za podocna da se smeni brojot na smetki (ako se izbrishe nekoja) 
+        inc bx
+        findValue:
+        cmp dl, cl 
+        je nemaVrednost ;sme gi izminale site smetki i ne e najdena smetka so taa vrednost
+        inc cl
+        mov ax, [bx]         
+        add bx, 2d
+        cmp ax, value
+        jne findValue 
+        sub bx, 2d
         
+        shiftLoop1:
+        mov al, [bx+2]
+        mov [bx], al
+        inc bx
+        cmp bx, endPosition
+        jne shiftLoop1
+        dec dl
+        pop bx         
+        mov [bx], dl ;se namaluva brojot na smetki
+        sub endPosition, 2d  
+        jmp endFunc
+        
+        izbrishiZapis:
+        ;ako ima edna vrednost se brishe celiot zapis
+        sub bx, 3d  
+        mov cl, dl ;vo cx go imame brojot na vrednosti za tekovniot datum
+        mov ch, 0d
+        mov dx, 4d ;vo dx ja imame goleminata na zapisot
+        add dx, cx ;cx se dodava 2 pati zatoa shto vrednostite se so golemina od 2 bajti
+        add dx, cx 
+        
+        shiftLoop2:  
+        add bx, dx
+        mov al, [bx]
+        sub bx, dx
+        mov [bx], al
+        inc bx
+        cmp bx, endPosition
+        jne shiftLoop2 
+        sub endPosition, dx 
+          
+        nemaVrednost:
+        pop bx ;zatoa shto prethodno ima push, a ne stignuva do soodvetniot pop  
+          
+        endFunc:
+        ret    
     eraseBill endp
     
     maxBill proc 
@@ -220,10 +278,6 @@ start:
     mov es, ax
 
     ;vlez izlez kod tuka
-    call addBill   
-    call addBill 
-    mov year, 16d 
-    call addBill 
     
 ;exit to operating system    
     mov ax, 4c00h
