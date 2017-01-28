@@ -2,10 +2,11 @@ data segment
     year db 17
     month db 1
     day db 28 
-    value dw 0
+    value dw 150
     error db "Greska$"      
     address dw 0
-    startPosition db 15d  
+    startPosition db 17d   
+    endPosition dw 17d 
 ends
 
 stack segment
@@ -110,7 +111,53 @@ code segment
     getIndex endp
     
     addBill proc
-         
+        call getIndex
+        pop bx
+        cmp bx, 0d
+        jne write
+        ;nema zapis za tekovniot datum, se dodava zapis na krajot  
+        mov bx, endPosition 
+        mov dl, day
+        mov [bx], dl 
+        inc bx
+        inc endPosition 
+        mov dl, month
+        mov [bx], dl 
+        inc bx
+        inc endPosition 
+        mov dl, year
+        mov [bx], dl
+        inc bx   
+        inc endPosition         
+        mov dl, 1d
+        mov [bx], dl
+        inc bx
+        inc endPosition 
+        mov dx, value
+        mov [bx], dx
+        add endPosition, 2d
+        jmp endAdd
+        
+        write:
+        ;ima zapis za tekovniot datum, se dodava na soodvetnoto mesto
+        mov dl, [bx] 
+        inc dl
+        mov [bx], dl 
+        mov cx, bx  
+        add cx, 2d ;cx pokazuva na pozicijata kade shto treba da se stavi value
+        mov bx, endPosition ;slednata pozicija na koja moze da se zapishe
+        shiftLoop:
+        mov al, [bx-2]
+        mov [bx], al ;se pomestuva za dva bajti vo devo
+        dec bx
+        cmp cx, bx ;dali sme stignae do poziijata kade shto treba da se zapishe
+        jne shiftLoop 
+        mov ax, value
+        mov [bx-1], ax
+        add endPosition, 2d
+          
+        endAdd:  
+        ret      
     addBill endp
     
     eraseBill proc 
@@ -172,7 +219,11 @@ start:
     mov ds, ax
     mov es, ax
 
-    ;vlez izlez kod tuka 
+    ;vlez izlez kod tuka
+    call addBill   
+    call addBill 
+    mov year, 16d 
+    call addBill 
     
 ;exit to operating system    
     mov ax, 4c00h
