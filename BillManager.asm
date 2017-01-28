@@ -12,7 +12,8 @@ stack segment
     dw   128  dup(0)
 ends
 
-code segment
+code segment  
+    
     checkDate proc
     ;28/29 -> February(2)
     ;30 -> April(4), June(6), September(9), November(11)
@@ -61,8 +62,49 @@ code segment
     checkDate endp
     
     getIndex proc
-        pop dx
-        push 0
+        pop dx  
+        mov bx, 0
+        mov bl, startPosition            ;za da pomestime adresata na prvata data
+        mov cx, 0
+        ciklus: 
+            mov ax, 0
+            mov al, [bx]
+            cmp ax, 0
+            je posledno
+            cmp al, day                  ;proverka dali denot od datumot e toj sto ni treba
+            uslovif:  
+                jne uslovelse    
+                inc bx  
+                inc cx
+                mov al, [bx] 
+                cmp al, month            ;proverka dali mesecot od datumot e toj sto ni treba
+                uslovif2:
+                    jne uslovelse
+                    inc bx 
+                    inc cx
+                    mov al, [bx] 
+                    cmp al, year         ;proverka dali godinata od datumot e taa sto ni treba
+                    uslovif3:
+                        jne uslovelse
+                        inc bx  
+                        mov ax, bx       ;se stava vo ax adresata na brojachot kolku smetki ima na taa data
+                        jmp posledno
+                      
+                
+            uslovelse:
+                sub bx, cx                ;ako ne sum na den, primer sme se pomestile na mesec ili godina
+                                          ;da se vratam na den 
+                mov ax, 0
+                mov al, [bx+3d]           ;za da se zeme vrednosta kolku smetki treba da skokneme
+                mov cx, 2
+                mul cl
+                add bx, ax 
+                inc bx                    ;so ova se skoknuvaat smetkite i se odi na denot od slednata data
+                mov cx, 0
+                jmp ciklus
+            
+        posledno: 
+        push ax
         push dx 
         ret        
     getIndex endp
@@ -75,9 +117,10 @@ code segment
         
     eraseBill endp
     
-    maxBill proc  
-              
-    maxBill endp
+    maxBill proc 
+                        
+    maxBill endp 
+    
     getMonthDaysNum proc
         pop dx
         if:                     ;za mesec fevruari
@@ -121,7 +164,8 @@ code segment
         push cx
         push dx
         ret        
-    getMonthDaysNum endp
+    getMonthDaysNum endp  
+    
 start:
 ; set segment registers:
     mov ax, data
@@ -129,7 +173,6 @@ start:
     mov es, ax
 
     ;vlez izlez kod tuka 
-    
     
 ;exit to operating system    
     mov ax, 4c00h
