@@ -1,5 +1,10 @@
 data segment
-    
+year db 0
+month db 0
+day db 0 
+value dw 0
+error db "Greska$"
+startPosition db 0  
 ends
 
 stack segment
@@ -31,7 +36,8 @@ start:
     mov ds, ax
     mov es, ax
 
-    ;vlez izlez kod tuka
+    ;vlez izlez kod tuka  
+    
     
 ;exit to operating system    
     mov ax, 4c00h
