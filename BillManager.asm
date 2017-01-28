@@ -1,10 +1,10 @@
 data segment
-year db 0
-month db 0
-day db 0 
-value dw 0
-error db "Greska$"
-startPosition db 0  
+    year db 0
+    month db 0
+    day db 0 
+    value dw 0
+    error db "Greska$"
+    startPosition db 0  
 ends
 
 stack segment
@@ -12,24 +12,25 @@ stack segment
 ends
 
 code segment
-    proc checkDate
+    checkDate proc
         
-    endp
+    checkDate endp
     
-    proc getIndex
+    getIndex proc
         
-    endp
+    getIndex endp
     
-    proc addBill
-    endp
+    addBill proc
+         
+    addBill endp
     
-    proc eraseBill
+    eraseBill proc 
         
-    endp
+    eraseBill endp
     
-    proc maxBill
+    maxBill proc 
         
-    endp
+    maxBill endp
 start:
 ; set segment registers:
     mov ax, data
