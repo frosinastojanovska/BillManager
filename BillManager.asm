@@ -226,9 +226,160 @@ code segment
         ret        
     eraseBill endp
     
-    maxBill proc 
-                        
-    maxBill endp 
+    maxBill proc
+        pop dx  
+        mov day, 0d      
+        push dx
+        call getMonthDaysNum
+        pop cx                  ;brojot na denovi vo mesecot 
+        pop dx
+        mov day, 01d            ;denot na koj sme momentalno
+        while:
+            push cx             ;da se socuva uste kolku dena treba da se pominat
+            push dx             ;da se socuva adresata da ne se izgubi
+            call getIndex       ;da se zeme datumot od memorija
+            pop bx              ;adresata na brojot na smetki za dadeniot den
+            pop dx
+            pop cx  
+            cmp bx, 0           
+            je zavrsetok        ;ako adresata e nula, znaci nemame zapis za toj den
+            push cx             ;da se socuva do koj den sme deka kje ni treba za drugo
+            mov cx, 0h
+            mov cl, [bx]        ;da se socuva kolku vrednosti treba da proverime i da najdeme max 
+            push dx             ;da se socuva adresata za vrakjanje deka kje go upotrebuvame dx za drugo
+            mov dx, 0            
+            mov max, 0          ;vo ovaa promenliva kje stoi max vrednosta  
+            inc bx
+            while2:
+                mov ax, [bx]
+                cmp max, ax
+                jge skokni
+                mov max, ax
+                skokni: 
+                add bx, 2
+                loop while2 
+            pop dx
+            pop cx 
+            cmp max, 0
+            je zavrsetok
+            ;printanje na max
+            push cx 
+            push dx
+            call printMax 
+            pop dx 
+            pop cx           
+            zavrsetok:
+            inc day
+            loop while
+            
+        izlez: 
+        push dx
+        ret                         
+    maxBill endp   
+    
+    printMax proc 
+        pop bx                 
+        
+            lea dx, stringPrint1  ;printanje na prviot del od stringot
+            mov ah, 9h
+            int 21h
+            
+            ;printanje na den
+            mov ax, 0h 
+            mov al, day
+            mov cl, 10d
+            div cl
+            mov dx, ax
+            add dl, 48d 
+            mov ah, 02h
+            int 21h 
+            mov dl, dh 
+            add dl, 48d
+            mov ah, 02h
+            int 21h
+            
+            mov dl, 46d
+            mov ah, 02h
+            int 21h
+            ;printanje na mesec
+            mov ax, 0h 
+            mov al, month
+            mov cl, 10d
+            div cl
+            mov dx, ax
+            add dl, 48d 
+            mov ah, 02h
+            int 21h 
+            mov dl, dh 
+            add dl, 48d
+            mov ah, 02h
+            int 21h
+            
+            mov dl, 46d
+            mov ah, 02h
+            int 21h
+                   
+            ;printanje na godina
+            mov dl, 50d       ;printanje na 2
+            mov ah, 02h
+            int 21h
+            mov dl, 48d       ;printanje na 0
+            mov ah, 02h
+            int 21h  
+            mov ax, 0h        ;printanje na drugite dve brojki od godinata
+            mov al, year
+            mov cl, 10d
+            div cl
+            mov dx, ax
+            add dl, 48d 
+            mov ah, 02h
+            int 21h 
+            mov dl, dh 
+            add dl, 48d
+            mov ah, 02h
+            int 21h
+            
+            lea dx, stringPrint2  ;printanje na vtoriot del od stringot
+            mov ah, 9h
+            int 21h 
+            
+            ;printanje na max vrednost
+            mov dx, 10d 
+            mov cx, 0d
+            delenje:
+                cmp max, 0
+                je printaj 
+                inc cx
+                mov ax, max
+                push cx
+                mov cx, dx
+                mov dx, 0d
+                div cx 
+                mov max, ax
+                mov ax, cx     
+                pop cx
+                push dx
+                mov dx, ax
+                jmp delenje
+                
+                
+            printaj:
+                pop dx
+                add dl, 48d
+                mov ah, 02h
+                int 21h
+                loop printaj 
+                
+            mov dl, 0dh
+            mov ah, 02h
+            int 21h 
+            mov dl, 0ah
+            mov ah, 02h
+            int 21h
+            
+        push bx
+        ret        
+    printMax endp 
     
     getMonthDaysNum proc
         pop dx
@@ -279,7 +430,7 @@ start:
 ; set segment registers:
     mov ax, data
     mov ds, ax                      
-    mov es, ax
+    mov es, ax 
 
     ;vlez izlez kod tuka 
     call addBill 
@@ -288,6 +439,8 @@ start:
     call addBill 
     mov year, 16d 
     call addBill
+    mov value, 200d
+    call maxBill
     call addBill 
     mov year, 17d 
     call eraseBill
