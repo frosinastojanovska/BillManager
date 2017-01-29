@@ -1,8 +1,8 @@
 data segment
-    year db 17
-    month db 1
-    day db 28 
-    value dw 150
+    year db 0
+    month db 0
+    day db 0 
+    value dw 0
     error db "Greska$" 
     stringPrint1 db "Na den $"
     stringPrint2 db " maksimalnata suma e $"       
@@ -319,14 +319,8 @@ code segment
             mov ah, 02h
             int 21h
                    
-            ;printanje na godina
-            mov dl, 50d       ;printanje na 2
-            mov ah, 02h
-            int 21h
-            mov dl, 48d       ;printanje na 0
-            mov ah, 02h
-            int 21h  
-            mov ax, 0h        ;printanje na drugite dve brojki od godinata
+            ;printanje na godina  
+            mov ax, 0h        
             mov al, year
             mov cl, 10d
             div cl
@@ -432,18 +426,8 @@ start:
     mov ds, ax                      
     mov es, ax 
 
-    ;vlez izlez kod tuka 
-    call addBill 
-    call addBill
-    ;mov value, 200d  
-    call addBill 
-    mov year, 16d 
-    call addBill
-    mov value, 200d
-    call maxBill
-    call addBill 
-    mov year, 17d 
-    call eraseBill
+    ;vlez izlez kod tuka
+    
     
 ;exit to operating system    
     mov ax, 4c00h
