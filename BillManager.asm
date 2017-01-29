@@ -3,10 +3,12 @@ data segment
     month db 1
     day db 28 
     value dw 150
-    error db "Greska$"      
-    address dw 0
-    startPosition db 17d   
-    endPosition dw 17d 
+    error db "Greska$" 
+    stringPrint1 db "Na den $"
+    stringPrint2 db " maksimalnata suma e $"       
+    max dw 0 
+    startPosition db 47d   
+    endPosition dw 47d
 ends
 
 stack segment
@@ -95,8 +97,9 @@ code segment
             uslovelse:
                 sub bx, cx                ;ako ne sum na den, primer sme se pomestile na mesec ili godina
                                           ;da se vratam na den 
-                mov ax, 0
-                mov al, [bx+3d]           ;za da se zeme vrednosta kolku smetki treba da skokneme
+                mov ax, 0    
+                add bx, 3d
+                mov al, [bx]           ;za da se zeme vrednosta kolku smetki treba da skokneme
                 mov cx, 2
                 mul cl
                 add bx, ax 
@@ -145,7 +148,7 @@ code segment
         mov [bx], dl 
         mov cx, bx  
         add cx, 2d ;cx pokazuva na pozicijata kade shto treba da se stavi value
-        mov bx, endPosition ;slednata pozicija na koja moze da se zapishe    
+        mov bx, endPosition ;slednata pozicija na koja moze da se zapishe   
         
         shiftLoop:
         mov al, [bx-2]
@@ -219,7 +222,8 @@ code segment
         pop bx ;zatoa shto prethodno ima push, a ne stignuva do soodvetniot pop  
           
         endFunc:
-        ret    
+        ;nema zapis za toj datum
+        ret        
     eraseBill endp
     
     maxBill proc 
@@ -274,10 +278,19 @@ code segment
 start:
 ; set segment registers:
     mov ax, data
-    mov ds, ax
+    mov ds, ax                      
     mov es, ax
 
-    ;vlez izlez kod tuka
+    ;vlez izlez kod tuka 
+    call addBill 
+    call addBill
+    ;mov value, 200d  
+    call addBill 
+    mov year, 16d 
+    call addBill
+    call addBill 
+    mov year, 17d 
+    call eraseBill
     
 ;exit to operating system    
     mov ax, 4c00h
