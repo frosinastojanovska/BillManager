@@ -364,6 +364,9 @@ code segment
                 int 21h
                 loop printaj 
                 
+            mov dl, 46d
+            mov ah, 02h
+            int 21h
             mov dl, 0dh
             mov ah, 02h
             int 21h 
