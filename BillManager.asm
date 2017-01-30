@@ -5,10 +5,11 @@ data segment
     value dw 0
     error db "Greska$" 
     stringPrint1 db "Na den $"
-    stringPrint2 db " maksimalnata suma e $"       
+    stringPrint2 db " maksimalnata suma e $"  
+    komanda db 21 dup(?)     
     max dw 0 
-    startPosition db 47d   
-    endPosition dw 47d
+    startPosition db 68d   
+    endPosition dw 68d
 ends
 
 stack segment
@@ -217,6 +218,7 @@ code segment
         cmp bx, endPosition
         jne shiftLoop2 
         sub endPosition, dx 
+        jmp endFunc
           
         nemaVrednost:
         pop bx ;zatoa shto prethodno ima push, a ne stignuva do soodvetniot pop  
@@ -421,17 +423,349 @@ code segment
         push cx
         push dx
         ret        
-    getMonthDaysNum endp  
+    getMonthDaysNum endp 
+    
+    checkCommand proc  
+    ;procedurata vrakja:
+    ;1 ako ima greshka
+    ;2 ako komandata e ADD
+    ;3 ako komandata e ERASE
+    ;4 ako komandata e MAX
+        pop dx
+        pop si
+        lodsb 
+        cmp al, 'E'
+        je e
+        cmp al, 'A'
+        je a
+        cmp al, 'M'
+        je m 
+        jmp imaGreshka
+        
+        e:
+        lodsb
+        cmp al, 'R'
+        jne imaGreshka 
+        lodsb 
+        cmp al, 'A'
+        jne imaGreshka 
+        lodsb
+        cmp al, 'S'
+        jne imaGreshka
+        lodsb 
+        cmp al, 'E'
+        jne imaGreshka  
+        lodsb 
+        cmp al, ' '
+        jne imaGreshka  
+        push 3d 
+        jmp okCommand
+        
+        a:
+        lodsb 
+        cmp al, 'D'
+        jne imaGreshka 
+        lodsb
+        cmp al, 'D'
+        jne imaGreshka 
+        lodsb 
+        cmp al, ' '
+        jne imaGreshka   
+        push 2d 
+        jmp okCommand
+        
+        m: 
+        lodsb 
+        cmp al, 'A'
+        jne imaGreshka 
+        lodsb
+        cmp al, 'X'
+        jne imaGreshka 
+        lodsb 
+        cmp al, ' '
+        jne imaGreshka  
+        push 4d 
+        jmp okCommand 
+        
+        okCommand:  
+        push si
+        push dx
+        ret
+                         
+        imaGreshka:
+        push 1d    
+        push si
+        push dx 
+        ret
+        
+    checkCommand endp  
+    
+    parseAddErase proc 
+        pop bx  
+        pop si
+        mov value, 0d
+        mov ax, 0d 
+        lodsb
+        cmp al, 49d  
+        jl greska
+        cmp al, 57d
+        jg greska
+        sub al, 48d
+        mov value, ax 
+        mov cx, 10d
+        mov dx, 0d   
+        oformiBroj:
+            mov ax, 0d
+            lodsb
+            cmp al, 62d 
+            je oformiDatum
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d 
+            mov dl, al
+            cmp value, 6553d
+            jg greska
+            cmp value, 6553d
+            jl ok
+            cmp dl, 5d
+            jg greska
+            ok:
+            mov ax, value 
+            push dx
+            mul cx  ;ovde bese cl
+            mov value, ax 
+            pop dx
+            add value, dx
+            jmp oformiBroj  
+            
+        oformiDatum:
+            ;den  
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d 
+            mov cx, 10d
+            mul cl
+            mov day, al
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d
+            add day, al
+            lodsb 
+            cmp al, 46d  
+            jne greska
+            ;mesec
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d 
+            mov cx, 10d
+            mul cl
+            mov month, al
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d
+            add month, al
+            lodsb 
+            cmp al, 46d  
+            jne greska
+            ;godina
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d 
+            mov cx, 10d
+            mul cl
+            mov year, al
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl greska
+            cmp al, 57d
+            jg greska
+            sub al, 48d
+            add year, al
+            lodsb 
+            cmp al, 46d  
+            jne greska     
+        
+        push 0 
+        jmp ending
+        
+        greska:
+        push 1
+        
+        ending:
+        push bx
+        ret
+    parseAddErase endp 
+    
+    parseMax proc
+        pop bx
+        mov day, 0d 
+        ;mesec
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl gresno
+            cmp al, 57d
+            jg gresno
+            sub al, 48d 
+            mov cx, 10d
+            mul cl
+            mov month, al
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl gresno
+            cmp al, 57d
+            jg gresno
+            sub al, 48d
+            add month, al
+            lodsb 
+            cmp al, 46d  
+            jne gresno
+            ;godina
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl gresno
+            cmp al, 57d
+            jg gresno
+            sub al, 48d 
+            mov cx, 10d
+            mul cl
+            mov year, al
+            mov ax, 0d
+            lodsb 
+            cmp al, 48d  
+            jl gresno
+            cmp al, 57d
+            jg gresno
+            sub al, 48d
+            add year, al
+            lodsb 
+            cmp al, 33d  
+            jne gresno     
+        
+        push 0 
+        jmp zavrsi
+        
+        gresno:
+        push 1
+        
+        zavrsi:
+        push bx
+        ret
+    parseMax endp
     
 start:
 ; set segment registers:
     mov ax, data
     mov ds, ax                      
     mov es, ax 
-
-    ;vlez izlez kod tuka
+      
+    input:  
+    mov cx, 0  
+    lea di, komanda
+    procitaj:
+    mov ah, 01h
+    int 21h 
+    cmp al, 0Dh
+    je izlezi 
+    inc cx
+    cmp cx, 21d  
+    jg procitaj    
+    stosb
+    jmp procitaj 
     
+    izlezi: 
+    mov dl, 0ah
+    mov ah, 02h
+    int 21h
+    cmp cx, 21d
+    jg greshka
+        
+    prodolzi:  
+    lea di, komanda
+    push di
+    call checkCommand  
+    pop si
+    pop cx ;vrednosta koja ja vraka procedurata checkCommand
+    cmp cx, 1d
+    je greshka 
+    push si
+    cmp cx, 4d ;dali komandata e max
+    je callMax 
+    cmp cx, 3d ;dali komandata e erase
+    je callErase
+      
+    ;komandata e add  
+    call parseAddErase
+    pop cx ;vrednosta koja ja vraka procedurata parseAddErase
+    cmp cx, 1d
+    je greshka 
+    call checkDate
+    pop cx ;vrednosta koja ja vraka procedurata checkDate
+    cmp cx, 0d
+    je greshka
+    call addBill
+    jmp input 
     
+    ;komandata e erase  
+    callErase:  
+    call parseAddErase
+    pop cx ;vrednosta koja ja vraka procedurata parseAddErase
+    cmp cx, 1d
+    je greshka 
+    pop cx ;vrednosta koja ja vraka procedurata checkDate
+    cmp cx, 0d
+    je greshka
+    call eraseBill
+    jmp input
+      
+    ;komandata e max  
+    callMax: 
+    call parseMax 
+    pop cx ;vrednosta koja ja vraka procedurata parseMax
+    cmp cx, 1d
+    je greshka 
+    pop cx ;vrednosta koja ja vraka procedurata checkDate
+    cmp cx, 0d
+    je greshka
+    call maxBill
+    jmp input
+            
+    greshka: 
+    mov ah, 9
+    lea dx, error
+    int 21h 
+    mov dl, 0dh
+    mov ah, 02h
+    int 21h 
+    mov dl, 0ah
+    mov ah, 02h
+    int 21h
+    jmp input
+              
 ;exit to operating system    
     mov ax, 4c00h
     int 21h    
