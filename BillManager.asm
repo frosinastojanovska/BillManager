@@ -763,7 +763,16 @@ start:
     int 21h 
     mov dl, 0ah
     mov ah, 02h
-    int 21h
+    int 21h 
+    
+    ;isprazni ja komandata
+    mov cx, 21d
+    lea di, komanda
+    isprazni:
+        mov al, 0d
+        stosb
+        loop isprazni
+        
     jmp input
               
 ;exit to operating system    
